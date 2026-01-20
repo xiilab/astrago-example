@@ -113,7 +113,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyTorch DDP ResNet50 AstraGo 워크로드 테스트용")
     parser.add_argument('--epochs', type=int, default=100, help='학습 에폭 수 (default: 100)')
     parser.add_argument('--batch-size', type=int, default=64, help='배치 크기 (default: 64)')
-    parser.add_argument('--dataset-size', type=int, default=100000, help='데이터셋 샘플 수 (default: 100000)')
+    parser.add_argument('--dataset-size', type=int, default=100, help='데이터셋 샘플 수 (default: 100000)')
     parser.add_argument('--lr', type=float, default=0.001, help='학습률 (default: 0.001)')
     parser.add_argument('--num-workers', type=int, default=4, help='DataLoader num_workers (default: 4)')
     parser.add_argument('--save-dir', type=str, default='./checkpoints', help='모델 저장 디렉토리 (default: ./checkpoints)')
