@@ -133,21 +133,12 @@ def main():
     args.dataset_path = os.path.realpath(args.dataset_path)
 
     # --- 디바이스 확인 ---
-    MIN_CUDA_CAPABILITY = 7.5
     if args.cpu:
         device_info = "CPU (강제)"
     elif torch.cuda.is_available():
         gpu_count = torch.cuda.device_count()
         gpu_name = torch.cuda.get_device_name(0)
-        capability = torch.cuda.get_device_capability(0)
-        cap_version = float(f"{capability[0]}.{capability[1]}")
-        if cap_version < MIN_CUDA_CAPABILITY:
-            print(f"  ⚠ GPU ({gpu_name}) CUDA capability {cap_version} < {MIN_CUDA_CAPABILITY}")
-            print(f"  ⚠ 현재 PyTorch가 이 GPU를 지원하지 않아 CPU 모드로 전환합니다.")
-            device_info = f"CPU (GPU {gpu_name} 비호환 - capability {cap_version})"
-            args.cpu = True
-        else:
-            device_info = f"GPU x{gpu_count} ({gpu_name})"
+        device_info = f"GPU x{gpu_count} ({gpu_name})"
     else:
         device_info = "CPU (GPU 없음)"
         args.cpu = True
