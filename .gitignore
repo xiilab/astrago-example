@@ -13,6 +13,9 @@ finetuned-model/
 *.pt
 *.bin
 
+# Dataset cache
+dataset/cache-*.arrow
+
 # Model, dataset, packages are committed directly (no LFS)
 
 # Environment
