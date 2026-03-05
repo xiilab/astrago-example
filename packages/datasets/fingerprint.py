@@ -8,8 +8,14 @@ from functools import wraps
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
+import hashlib
+
 import numpy as np
-import xxhash
+
+try:
+    import xxhash
+except ImportError:
+    xxhash = None
 
 from . import config
 from .naming import INVALID_WINDOWS_CHARACTERS_IN_PATH
@@ -193,18 +199,24 @@ def get_temporary_cache_files_directory() -> str:
 #################
 
 
+def _new_hasher():
+    if xxhash is not None:
+        return xxhash.xxh64()
+    return hashlib.md5(usedforsecurity=False)
+
+
 class Hasher:
     """Hasher that accepts python objects as inputs."""
 
     dispatch: dict = {}
 
     def __init__(self):
-        self.m = xxhash.xxh64()
+        self.m = _new_hasher()
 
     @classmethod
     def hash_bytes(cls, value: Union[bytes, list[bytes]]) -> str:
         value = [value] if isinstance(value, bytes) else value
-        m = xxhash.xxh64()
+        m = _new_hasher()
         for x in value:
             m.update(x)
         return m.hexdigest()
