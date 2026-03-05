@@ -126,9 +126,11 @@ def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     if not os.path.isabs(args.model_path):
-        args.model_path = os.path.normpath(os.path.join(script_dir, args.model_path))
+        args.model_path = os.path.join(script_dir, args.model_path)
     if not os.path.isabs(args.dataset_path):
-        args.dataset_path = os.path.normpath(os.path.join(script_dir, args.dataset_path))
+        args.dataset_path = os.path.join(script_dir, args.dataset_path)
+    args.model_path = os.path.realpath(args.model_path)
+    args.dataset_path = os.path.realpath(args.dataset_path)
 
     # --- 디바이스 확인 ---
     if args.cpu:
