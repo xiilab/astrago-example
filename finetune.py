@@ -124,6 +124,9 @@ def main():
 
     args = parser.parse_args()
 
+    args.model_path = os.path.abspath(args.model_path)
+    args.dataset_path = os.path.abspath(args.dataset_path)
+
     # --- 디바이스 확인 ---
     if args.cpu:
         device_info = "CPU (강제)"
