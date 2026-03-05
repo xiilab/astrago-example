@@ -386,6 +386,12 @@ def cached_files(
     if os.path.isdir(path_or_repo_id):
         return existing_files if existing_files else None
 
+    if os.path.sep in path_or_repo_id or path_or_repo_id.startswith("."):
+        raise OSError(
+            f"'{path_or_repo_id}' appears to be a local path but the directory was not found. "
+            "Please check that the path exists and is accessible."
+        )
+
     if cache_dir is None:
         cache_dir = constants.HF_HUB_CACHE
     if isinstance(cache_dir, Path):
