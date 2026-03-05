@@ -1,24 +1,7 @@
 import os
 import sys
-import glob
-import shutil
-import importlib
 
-_packages_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "packages")
-
-sys.path.insert(0, _packages_dir)
-
-for _entry in os.listdir(_packages_dir):
-    _pkg_path = os.path.join(_packages_dir, _entry)
-    if not os.path.isdir(_pkg_path):
-        continue
-    if not glob.glob(os.path.join(_pkg_path, "**", "*.so"), recursive=True):
-        continue
-    try:
-        importlib.import_module(_entry)
-    except (ImportError, OSError):
-        shutil.rmtree(_pkg_path, ignore_errors=True)
-        importlib.invalidate_caches()
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "packages"))
 
 import argparse
 import torch
