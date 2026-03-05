@@ -83,7 +83,7 @@ def load_koalpaca(dataset_path: str, max_samples: int | None = None):
     else:
         dataset = load_dataset(dataset_path, split="train")
 
-    if max_samples and max_samples < len(dataset):
+    if max_samples and max_samples > 0 and max_samples < len(dataset):
         dataset = dataset.select(range(max_samples))
 
     return dataset
@@ -97,17 +97,17 @@ def main():
                         help=f"데이터셋 경로 또는 HuggingFace 데이터셋명 (default: {DEFAULT_DATASET})")
     parser.add_argument("--output-dir", type=str, default="./finetuned-model",
                         help="파인튜닝 결과 저장 경로 (default: ./finetuned-model)")
-    parser.add_argument("--epochs", type=int, default=3, help="학습 에폭 수 (default: 3)")
-    parser.add_argument("--batch-size", type=int, default=4, help="배치 크기 (default: 4)")
-    parser.add_argument("--gradient-accumulation-steps", type=int, default=4,
-                        help="그래디언트 누적 스텝 (default: 4)")
+    parser.add_argument("--epochs", type=int, default=1, help="학습 에폭 수 (default: 1)")
+    parser.add_argument("--batch-size", type=int, default=8, help="배치 크기 (default: 8)")
+    parser.add_argument("--gradient-accumulation-steps", type=int, default=2,
+                        help="그래디언트 누적 스텝 (default: 2)")
     parser.add_argument("--learning-rate", type=float, default=2e-4, help="학습률 (default: 2e-4)")
-    parser.add_argument("--max-length", type=int, default=512, help="최대 토큰 길이 (default: 512)")
-    parser.add_argument("--warmup-steps", type=int, default=100, help="워밍업 스텝 (default: 100)")
+    parser.add_argument("--max-length", type=int, default=256, help="최대 토큰 길이 (default: 256)")
+    parser.add_argument("--warmup-steps", type=int, default=50, help="워밍업 스텝 (default: 50)")
     parser.add_argument("--logging-steps", type=int, default=10, help="로깅 간격 (default: 10)")
     parser.add_argument("--save-steps", type=int, default=500, help="체크포인트 저장 간격 (default: 500)")
-    parser.add_argument("--max-samples", type=int, default=None,
-                        help="최대 학습 샘플 수 (default: 전체)")
+    parser.add_argument("--max-samples", type=int, default=5000,
+                        help="최대 학습 샘플 수 (default: 5000, 전체: -1)")
 
     # LoRA
     parser.add_argument("--use-lora", action="store_true", default=True, help="LoRA 사용 (default: True)")
@@ -191,8 +191,15 @@ def main():
     # --- 학습 설정 ---
     print("\n[3/4] 학습 시작...")
     use_cpu = args.cpu
-    fp16 = args.fp16 and not args.cpu and torch.cuda.is_available()
-    bf16 = args.bf16 and not args.cpu and torch.cuda.is_available()
+    use_gpu = not use_cpu and torch.cuda.is_available()
+
+    fp16 = args.fp16
+    bf16 = args.bf16
+    if use_gpu and not fp16 and not bf16:
+        if torch.cuda.is_bf16_supported():
+            bf16 = True
+        else:
+            fp16 = True
 
     training_args = TrainingArguments(
         output_dir=args.output_dir,
@@ -210,8 +217,11 @@ def main():
         report_to="none",
         remove_unused_columns=False,
         dataloader_num_workers=4,
+        dataloader_pin_memory=use_gpu,
+        dataloader_prefetch_factor=2 if use_gpu else None,
         lr_scheduler_type="cosine",
         weight_decay=0.01,
+        torch_compile=hasattr(torch, "compile") and use_gpu,
     )
 
     trainer = Trainer(
