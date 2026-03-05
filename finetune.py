@@ -196,7 +196,8 @@ def main():
     fp16 = args.fp16
     bf16 = args.bf16
     if use_gpu and not fp16 and not bf16:
-        if torch.cuda.is_bf16_supported():
+        major, _ = torch.cuda.get_device_capability(0)
+        if major >= 8:
             bf16 = True
         else:
             fp16 = True
