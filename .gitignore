@@ -12,7 +12,6 @@ finetuned-model/
 *.pth
 *.pt
 *.bin
-*.safetensors
 
 # Model, dataset, packages are committed directly (no LFS)
 
