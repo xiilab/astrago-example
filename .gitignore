@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# PyTorch
+checkpoints/
+finetuned-model/
+*.pth
+*.pt
+*.bin
+*.safetensors
+
+# Model, dataset, packages are committed directly (no LFS)
+
+# Environment
+.env
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+wandb/
+runs/

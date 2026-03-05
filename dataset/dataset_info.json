@@ -1,0 +1,46 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "ko_alpaca-v1.1a",
+  "dataset_size": 23371027,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/beomi/KoAlpaca-v1.1a@03d3122c530b1e47195c08a3d851eeadddad9689/data/train-00000-of-00001-21df739eb88d711e.parquet": {
+      "num_bytes": 12856014,
+      "checksum": null
+    }
+  },
+  "download_size": 12856014,
+  "features": {
+    "instruction": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "output": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "url": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 36227041,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 23371027,
+      "num_examples": 21155,
+      "dataset_name": "ko_alpaca-v1.1a"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}
