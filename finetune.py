@@ -1,7 +1,16 @@
 import os
 import sys
+import shutil
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "packages"))
+_packages_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "packages")
+
+_native_only_packages = ["pyarrow"]
+for _pkg in _native_only_packages:
+    _vendored = os.path.join(_packages_dir, _pkg)
+    if os.path.isdir(_vendored):
+        shutil.rmtree(_vendored, ignore_errors=True)
+
+sys.path.insert(0, _packages_dir)
 
 import argparse
 import torch
