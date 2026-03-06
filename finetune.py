@@ -247,13 +247,22 @@ def main():
     final_dir = os.path.join(args.output_dir, "final")
     model.save_pretrained(final_dir)
 
+    import json
     import shutil
-    tokenizer_files = ["tokenizer.json", "tokenizer_config.json", "special_tokens_map.json",
-                       "merges.txt", "vocab.json"]
+    tokenizer_files = ["tokenizer.json", "special_tokens_map.json", "merges.txt", "vocab.json"]
     for f in tokenizer_files:
         src = os.path.join(args.model_path, f)
         if os.path.isfile(src):
             shutil.copy2(src, os.path.join(final_dir, f))
+
+    tc_src = os.path.join(args.model_path, "tokenizer_config.json")
+    if os.path.isfile(tc_src):
+        with open(tc_src) as f:
+            tc = json.load(f)
+        tc.pop("extra_special_tokens", None)
+        tc.pop("is_local", None)
+        with open(os.path.join(final_dir, "tokenizer_config.json"), "w") as f:
+            json.dump(tc, f, indent=2)
     print(f"  모델 저장 완료: {final_dir}")
 
     # --- 간단한 생성 테스트 ---
