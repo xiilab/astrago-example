@@ -206,8 +206,9 @@ def main():
 
     use_torch_compile = use_gpu and gpu_major >= 8 and hasattr(torch, "compile")
 
+    checkpoint_dir = os.path.join(args.output_dir, "checkpoints")
     training_args = TrainingArguments(
-        output_dir=args.output_dir,
+        output_dir=checkpoint_dir,
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
@@ -240,13 +241,12 @@ def main():
 
     # --- 모델 저장 ---
     print("\n[4/4] 모델 저장 중...")
-    final_output_dir = os.path.join(args.output_dir, "final")
     if args.use_lora:
         print("  LoRA 어댑터를 기본 모델에 병합 중...")
         model = model.merge_and_unload()
-    model.save_pretrained(final_output_dir)
-    tokenizer.save_pretrained(final_output_dir)
-    print(f"  모델 저장 완료: {final_output_dir}")
+    model.save_pretrained(args.output_dir)
+    tokenizer.save_pretrained(args.output_dir)
+    print(f"  모델 저장 완료: {args.output_dir}")
 
     # --- 간단한 생성 테스트 ---
     print("\n" + "=" * 60)
