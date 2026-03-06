@@ -246,7 +246,14 @@ def main():
         model = model.merge_and_unload()
     final_dir = os.path.join(args.output_dir, "final")
     model.save_pretrained(final_dir)
-    tokenizer.save_pretrained(final_dir)
+
+    import shutil
+    tokenizer_files = ["tokenizer.json", "tokenizer_config.json", "special_tokens_map.json",
+                       "merges.txt", "vocab.json"]
+    for f in tokenizer_files:
+        src = os.path.join(args.model_path, f)
+        if os.path.isfile(src):
+            shutil.copy2(src, os.path.join(final_dir, f))
     print(f"  모델 저장 완료: {final_dir}")
 
     # --- 간단한 생성 테스트 ---
