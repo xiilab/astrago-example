@@ -195,12 +195,16 @@ def main():
 
     fp16 = args.fp16
     bf16 = args.bf16
-    if use_gpu and not fp16 and not bf16:
-        major, _ = torch.cuda.get_device_capability(0)
-        if major >= 8:
-            bf16 = True
-        else:
-            fp16 = True
+    gpu_major = 0
+    if use_gpu:
+        gpu_major, _ = torch.cuda.get_device_capability(0)
+        if not fp16 and not bf16:
+            if gpu_major >= 8:
+                bf16 = True
+            else:
+                fp16 = True
+
+    use_torch_compile = use_gpu and gpu_major >= 8 and hasattr(torch, "compile")
 
     training_args = TrainingArguments(
         output_dir=args.output_dir,
@@ -222,7 +226,7 @@ def main():
         dataloader_prefetch_factor=2 if use_gpu else None,
         lr_scheduler_type="cosine",
         weight_decay=0.01,
-        torch_compile=hasattr(torch, "compile") and use_gpu,
+        torch_compile=use_torch_compile,
     )
 
     trainer = Trainer(
