@@ -244,9 +244,10 @@ def main():
     if args.use_lora:
         print("  LoRA 어댑터를 기본 모델에 병합 중...")
         model = model.merge_and_unload()
-    model.save_pretrained(args.output_dir)
-    tokenizer.save_pretrained(args.output_dir)
-    print(f"  모델 저장 완료: {args.output_dir}")
+    final_dir = os.path.join(args.output_dir, "final")
+    model.save_pretrained(final_dir)
+    tokenizer.save_pretrained(final_dir)
+    print(f"  모델 저장 완료: {final_dir}")
 
     # --- 간단한 생성 테스트 ---
     print("\n" + "=" * 60)
