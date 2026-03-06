@@ -1,9 +1,6 @@
 import os
 import sys
 
-if "CUDA_VISIBLE_DEVICES" not in os.environ:
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "packages"))
 
 import argparse
