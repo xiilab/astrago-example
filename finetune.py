@@ -244,7 +244,7 @@ def main():
     if args.use_lora:
         print("  LoRA 어댑터를 기본 모델에 병합 중...")
         model = model.merge_and_unload()
-    trainer.save_model(final_output_dir)
+    model.save_pretrained(final_output_dir)
     tokenizer.save_pretrained(final_output_dir)
     print(f"  모델 저장 완료: {final_output_dir}")
 
