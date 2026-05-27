@@ -1,0 +1,13 @@
+# NGC PyTorch 24.12 (torch 2.6.0a0, CUDA 12.6, Volta/sm_70 지원) 컨테이너용 정합 세트.
+# torch / torchvision 은 컨테이너 이미지가 제공하므로 여기 넣지 않는다.
+# (torch 를 추가하면 sm_70 미지원 빌드로 덮어써져 V100 에서 깨질 수 있음)
+#
+# transformers 는 4.53.0 부터 torch>=2.7 전용 API(TransformGetItemToIndex)를 import 하므로
+# torch 2.6 환경에서는 4.52.4 가 상한이다.
+transformers==4.52.4
+peft==0.19.1
+datasets==4.8.5
+accelerate==1.13.0
+huggingface_hub==0.36.2
+tokenizers==0.21.4
+safetensors==0.4.5

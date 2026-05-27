@@ -16,7 +16,7 @@ finetuned-model/
 # Dataset cache
 dataset/cache-*.arrow
 
-# Model, dataset, packages are committed directly (no LFS)
+# Model, dataset are committed directly (no LFS). Packages via requirements.txt.
 
 # Environment
 .env

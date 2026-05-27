@@ -23,7 +23,7 @@ LoRA(Low-Rank Adaptation)를 사용하여 적은 GPU 메모리로도 학습할 �
 ```
 ├── model/               # SmolLM2-135M (safetensors 분할, 파일당 <100MB)
 ├── dataset/             # KoAlpaca-v1.1a
-├── packages/            # Python 패키지 (torch 제외, pip install 불필요)
+├── requirements.txt     # Python 패키지 (torch 제외 — 이미지가 제공)
 ├── finetune.py          # 파인튜닝 메인 스크립트
 ├── train.py             # ResNet DDP 학습 (기존)
 └── .gitignore
@@ -33,13 +33,21 @@ LoRA(Low-Rank Adaptation)를 사용하여 적은 GPU 메모리로도 학습할 �
 
 #### 빠른 실행
 
-모델, 데이터셋, Python 패키지가 모두 레포에 포함되어 있으므로 폐쇄망에서도 바로 실행 가능합니다.
+모델과 데이터셋은 레포에 포함되어 있습니다. Python 패키지는 실행 전 한 번 설치합니다.
+권장 이미지는 `xiilab/astrago:pytorch-24.12` (torch 2.6, CUDA 12.6, Volta/sm_70 지원)입니다.
 
 ```bash
-# 바로 실행 (pip install 불필요, packages/ 자동 참조)
+# 패키지 설치 (torch 는 이미지가 제공하므로 requirements 에 없음)
+pip install -r requirements.txt
+
+# 바로 실행
 # 기본: 5,000 샘플, 1 에폭, GPU 자동 FP16/BF16 (~313 스텝)
 python finetune.py
 ```
+
+> ⚠️ torch 2.6 환경 제약: `transformers` 는 4.53.0 부터 torch 2.7 전용 API 를 import 하므로
+> 4.52.4 로 고정되어 있습니다. `requirements.txt` 에 torch 를 추가하지 마세요
+> (sm_70 미지원 빌드로 덮어써져 V100 에서 CUDA 커널 에러가 납니다).
 
 #### 전체 데이터 학습
 
@@ -205,6 +213,7 @@ python train.py --cpu --epochs 10 --batch-size 32
 ## 실행 환경
 
 - Python 3.12 이상
-- PyTorch 2.0 이상
-- CUDA 지원 GPU (권장, CPU도 가능)
-- 권장 이미지: `nvcr.io/nvidia/pytorch:24.10-py3`
+- PyTorch 2.6 (이미지 제공) — torch 2.7+ 는 Volta(V100, sm_70) 미지원이므로 사용하지 않음
+- CUDA 지원 GPU (권장, CPU도 가능) — V100(sm_70) 포함
+- 권장 이미지: `xiilab/astrago:pytorch-24.12` (또는 사내 레지스트리 `10.61.3.12:30002/astrago_built_in/pytorch:24.12`)
+- 실행 전 `pip install -r requirements.txt` 필요
