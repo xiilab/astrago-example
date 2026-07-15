@@ -1,0 +1,65 @@
+# MNIST 분산학습 TrainJob 예제 (Kubeflow Trainer v2)
+#
+# AstraGo v2 는 분산학습 워크로드를 Kubeflow Trainer v2 의 TrainJob(trainer.kubeflow.org/v1alpha1)
+# 으로 실행합니다. 이 매니페스트는 mnist_ddp.py 를 멀티노드로 돌리는 참조 예시입니다.
+#
+# 동작 방식
+#   - runtimeRef 로 ClusterTrainingRuntime "pytorch-runtime" 을 참조합니다.
+#     (astrago-deployment-v2 helmfile/addons/kubeflow-trainer-runtime 로 배포)
+#   - 런타임의 mlPolicy.torch.numProcPerNode="auto" 가 노드당 GPU 수만큼 torchrun 프로세스를 띄웁니다.
+#   - trainer.numNodes 가 노드(파드) 수입니다. 전체 world_size = numNodes x (노드당 GPU 수).
+#   - Trainer 컨트롤러가 torchrun rendezvous env(PET_*)를 주입하고, torchrun 이 각 프로세스에
+#     RANK/LOCAL_RANK/WORLD_SIZE/MASTER_ADDR/MASTER_PORT 를 세팅합니다.
+#     → mnist_ddp.py 는 이 env 만 읽으므로 코드 수정 없이 멀티노드로 확장됩니다.
+#
+# 소스코드 전달
+#   AstraGo UI 로 잡을 만들면 이 레포를 git-sync init 컨테이너로 자동 클론하고
+#   실행 커맨드를 "torchrun --nproc_per_node=<gpu수> mnist_ddp.py ..." 로 자동 래핑합니다.
+#   아래는 kubectl 로 직접 적용할 때의 형태로, command 에 torchrun 을 명시했습니다.
+#   (커스텀 이미지에 스크립트를 포함했다고 가정. git-sync 를 쓰면 command 를 스크립트만으로 둡니다.)
+
+apiVersion: trainer.kubeflow.org/v1alpha1
+kind: TrainJob
+metadata:
+  name: mnist-ddp
+spec:
+  runtimeRef:
+    name: pytorch-runtime          # ClusterTrainingRuntime (PyTorch)
+    apiGroup: trainer.kubeflow.org
+    kind: ClusterTrainingRuntime
+  trainer:
+    numNodes: 2                     # 노드(파드) 수. GPU 1개/노드면 world_size = 2
+    resourcesPerNode:
+      limits:
+        nvidia.com/gpu: "1"         # 노드당 GPU 수 = torchrun --nproc_per_node
+    command:
+      - torchrun
+      - mnist_ddp.py
+      - "--epochs"
+      - "5"
+      - "--batch-size"
+      - "64"
+    env:
+      - name: OUTPUT_DIR            # rank 0 이 모델을 저장할 경로 (AstraGo 가 주입하기도 함)
+        value: /workspace/output
+---
+# CPU 전용 클러스터에서 테스트할 때 (gloo 백엔드, GPU 자원 요청 없음):
+#
+# apiVersion: trainer.kubeflow.org/v1alpha1
+# kind: TrainJob
+# metadata:
+#   name: mnist-ddp-cpu
+# spec:
+#   runtimeRef:
+#     name: pytorch-runtime
+#     apiGroup: trainer.kubeflow.org
+#     kind: ClusterTrainingRuntime
+#   trainer:
+#     numNodes: 2
+#     command:
+#       - torchrun
+#       - "--nproc_per_node=1"      # CPU 는 auto 대신 명시 권장
+#       - mnist_ddp.py
+#       - "--cpu"
+#       - "--epochs"
+#       - "1"

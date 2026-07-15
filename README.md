@@ -200,6 +200,67 @@ python train.py --cpu --epochs 10 --batch-size 32
 
 자세한 옵션은 `python train.py --help`를 참고하세요.
 
+> **참고**: `train.py`는 `mp.spawn` + `MASTER_ADDR=127.0.0.1` 하드코딩 방식이라 **단일 노드** 멀티 GPU 전용입니다. 멀티 노드 분산학습(AstraGo TrainJob)은 아래 `mnist_ddp.py`를 사용하세요.
+
+---
+
+## 3. MNIST 분산학습 (torchrun / AstraGo TrainJob)
+
+PyTorch DDP 기반 MNIST 분산학습 예제입니다.
+**torchrun 컨트랙트**로 작성되어 단일 프로세스 → 단일 노드 멀티 GPU → **멀티 노드**까지 코드 변경 없이 확장됩니다. AstraGo v2의 분산학습(Kubeflow Trainer v2 `TrainJob`) 워크로드 검증에 적합합니다.
+
+### 주요 특징
+
+- **torchrun 기반**: 프로세스 스폰과 분산 좌표(`RANK`/`LOCAL_RANK`/`WORLD_SIZE`/`MASTER_ADDR`/`MASTER_PORT`) 주입은 torchrun/Trainer 컨트롤러가 담당하고, 스크립트는 환경변수만 읽습니다. `mp.spawn` 미사용.
+- **완전 오프라인**: MNIST 데이터(`data/MNIST/raw/*.gz`)를 레포에 번들하고 `.gz`를 직접 읽습니다. 모델은 코드로 정의한 소형 CNN이라 사전학습 가중치 다운로드가 없습니다. **torchvision 불필요** (`torch` + stdlib만).
+- **자동 fallback**: 환경변수가 없으면(`python mnist_ddp.py`) 단일 프로세스로 실행됩니다.
+- **CPU / 단일 GPU / 멀티 GPU / 멀티 노드 지원**
+
+### 파일
+
+```
+├── mnist_ddp.py         # MNIST 분산학습 스크립트
+├── data/MNIST/raw/      # 번들된 MNIST (idx-ubyte .gz, ~11MB)
+└── trainjob.yaml        # Kubeflow TrainJob 매니페스트 예제
+```
+
+### 실행 방법
+
+```bash
+# 1) 단일 프로세스 (torchrun 없이)
+python mnist_ddp.py --epochs 5
+
+# 2) 단일 노드 N GPU (또는 CPU 프로세스 N개)
+torchrun --nproc_per_node=2 --standalone mnist_ddp.py --epochs 5
+
+# 3) CPU 모드
+python mnist_ddp.py --cpu --epochs 1
+```
+
+### AstraGo TrainJob으로 실행
+
+AstraGo UI로 분산학습 잡을 만들면 이 레포가 git-sync로 파드에 클론되고, 실행 커맨드가 `torchrun --nproc_per_node=<GPU수> mnist_ddp.py ...`로 자동 래핑됩니다. `numNodes`(노드 수) × 노드당 GPU 수 = 전체 world_size.
+
+kubectl로 직접 적용하려면 `trainjob.yaml`을 참고하세요.
+
+```bash
+kubectl apply -f trainjob.yaml
+```
+
+### 주요 옵션
+
+| 인자 | 설명 | 기본값 |
+|------|------|--------|
+| `--epochs` | 학습 에폭 수 | `5` |
+| `--batch-size` | 프로세스당 배치 크기 | `64` |
+| `--lr` | 학습률 | `1e-3` |
+| `--data-dir` | MNIST 데이터 디렉토리 | `./data` |
+| `--save-dir` | 모델 저장 경로 (`OUTPUT_DIR` env 우선) | `./checkpoints` |
+| `--num-workers` | DataLoader num_workers | `2` |
+| `--cpu` | CPU 강제 실행 | OFF |
+
+모델은 rank 0에서만 저장됩니다(`mnist_cnn.pt`). loss는 매 에폭 `all_reduce`로 전 프로세스 평균을 rank 0이 출력합니다.
+
 ---
 
 ## 실행 환경
