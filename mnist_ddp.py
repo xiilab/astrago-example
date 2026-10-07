@@ -138,10 +138,12 @@ def is_distributed() -> bool:
 def setup_distributed(use_cuda: bool):
     """torchrun 이 주입한 env(RANK/WORLD_SIZE/MASTER_ADDR/PORT)로 프로세스 그룹 초기화."""
     local_rank = int(os.environ.get("LOCAL_RANK", "0"))
-    backend = "nccl" if use_cuda else "gloo"
-    dist.init_process_group(backend=backend)
     if use_cuda:
+        # device_id 로 프로세스 그룹을 GPU 에 묶어 두어야 barrier() 가 장치를 추측하지 않는다.
         torch.cuda.set_device(local_rank)
+        dist.init_process_group(backend="nccl", device_id=torch.device("cuda", local_rank))
+    else:
+        dist.init_process_group(backend="gloo")
     return dist.get_rank(), dist.get_world_size(), local_rank
 
 
